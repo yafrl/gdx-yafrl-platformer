@@ -82,10 +82,8 @@ class Game() {
             position = targetPosition,
             size = Float2(TILE_HEIGHT, TILE_HEIGHT),
             render = {
-                val tile = this.texture("tileset.png", 5 * 16, 2 * 16, 16, 16)
-
                 batch.draw(
-                    tile,
+                    texture("tileset.png", 5 * 16, 2 * 16, 16, 16),
                     targetPosition.x,
                     targetPosition.y,
                     TILE_HEIGHT,
