@@ -5,12 +5,15 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.ScreenUtils
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import io.github.sintrastes.yafrl.State
 import io.github.sintrastes.yafrl.BroadcastEvent
 import io.github.sintrastes.yafrl.broadcastEvent
 import io.github.sintrastes.yafrl.internal.Timeline
+import io.github.sintrastes.yafrl.vector.Float2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.time.Duration
@@ -20,8 +23,6 @@ class Main : ApplicationAdapter(), DrawScope {
     private lateinit var _batch: SpriteBatch
 
     private lateinit var background: Texture
-    private lateinit var player: Texture
-    private lateinit var tileset: Texture
 
     private lateinit var rootScope: CoroutineScope
     private lateinit var clock: BroadcastEvent<Duration>
@@ -45,11 +46,13 @@ class Main : ApplicationAdapter(), DrawScope {
         return textures[file]!!
     }
 
+    override fun texture(file: String, x: Int, y: Int, width: Int, height: Int): TextureRegion {
+        return TextureRegion(texture(file), x, y, width, height)
+    }
+
     override fun create() {
         _batch = SpriteBatch()
         background = Texture("background.png")
-        player = Texture("adventurer-idle-00.png")
-        tileset = Texture("tileset.png")
 
         rootScope = CoroutineScope(Dispatchers.Default)
 
@@ -64,10 +67,7 @@ class Main : ApplicationAdapter(), DrawScope {
 
         timeline = Timeline.currentTimeline()
 
-        game = Game(
-            tileset = tileset,
-            player = player
-        )
+        game = Game()
 
         entities = game.entities()
     }
@@ -80,6 +80,16 @@ class Main : ApplicationAdapter(), DrawScope {
         val dt = Gdx.graphics.deltaTime.toDouble().seconds
         clock.send(dt)
 
+        if (Gdx.input.justTouched()) {
+            val screenX = Gdx.input.x
+            val screenY = Gdx.input.y
+
+            // Convert screen coordinates to world coordinates (camera space)
+            val worldCoordinates = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
+
+            game.clicked.send(Float2(worldCoordinates.x, worldCoordinates.y))
+        }
+
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f)
         camera.update()
         batch.projectionMatrix = camera.combined
@@ -89,7 +99,12 @@ class Main : ApplicationAdapter(), DrawScope {
             Gdx.graphics.width.toFloat(),
             Gdx.graphics.height.toFloat()
         )
-        batch.draw(player, 0f, 0f, 4 * 50f, 4 * 36f)
+
+        println("Processing ${entities.value.size} entities, fps: ${1000f / dt.inWholeMilliseconds}")
+        for (entity in entities.value) {
+            entity.render(this)
+        }
+
         batch.end()
     }
 

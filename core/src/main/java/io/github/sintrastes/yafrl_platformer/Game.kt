@@ -18,16 +18,13 @@ val TILE_HEIGHT = 32f
 
 data class Int2(val x: Int, val y: Int)
 
-class Game(
-    private val tileset: Texture,
-    private val player: Texture
-) {
+class Game() {
     val clicked = broadcastEvent<Float2>("clicked")
 
     val clicks = State.fold(listOf<State<Entity>>(), clicked) { clicked, click ->
         clicked + entity(
             click,
-            accelerating(Float2(0f, 220f), Float2(0f, 350f)),
+            accelerating(Float2(0f, -220f), Float2(0f, -350f)),
         )
     }
 
@@ -39,15 +36,15 @@ class Game(
     val tiles = const(
         listOf<Entity>(
             *(10..16).map {
-                tile(Int2(it, 15))
+                tile(Int2(it, 10))
             }.toTypedArray(),
 
             *(25..31).map {
-                tile(Int2(it, 25))
+                tile(Int2(it, 15))
             }.toTypedArray(),
 
             *(0..120).map { x ->
-                tile(Int2(x, 36))
+                tile(Int2(x, 0))
             }.toTypedArray()
         )
     )
@@ -59,16 +56,16 @@ class Game(
 
     fun entities() = State.combineAll(
         entity(
-            Float2(GAME_SIZE.x / 2, 0f),
-            accelerating(Float2(0f, 420f), Float2(0f, 350f)),
+            Float2(GAME_SIZE.x / 2, 500f),
+            accelerating(Float2(0f, -100f), Float2(0f, -200f)),
         ),
         entity(
-            Float2(GAME_SIZE.x / 3, 100f),
-            accelerating(Float2(0f, 430f), Float2(0f, 350f)),
+            Float2(GAME_SIZE.x / 3, 200f),
+            accelerating(Float2(0f, -100f), Float2(0f, -200f)),
         ),
         entity(
-            Float2(2 * GAME_SIZE.x / 3, 50f),
-            accelerating(Float2(0f, 440f), Float2(0f, 350f)),
+            Float2(2 * GAME_SIZE.x / 3, 350f),
+            accelerating(Float2(0f, -100f), Float2(0f, -200f)),
         )
     ).combineWith(spawned) { initial, spawned ->
         initial + spawned
@@ -85,17 +82,15 @@ class Game(
             position = targetPosition,
             size = Float2(TILE_HEIGHT, TILE_HEIGHT),
             render = {
-//                drawImage(
-//                    image = tileset,
-//                    srcSize = Int2(16, 16),
-//                    dstSize = Int2(tileSize.roundToPx(), tileSize.roundToPx()),
-//                    srcOffset = IntOffset(5 * 16, 2 * 16),
-//                    dstOffset = IntOffset(
-//                        targetPosition.x.toInt(),
-//                        targetPosition.y.toInt()
-//                    ),
-//                    filterQuality = FilterQuality.None
-//                )
+                val tile = this.texture("tileset.png", 5 * 16, 2 * 16, 16, 16)
+
+                batch.draw(
+                    tile,
+                    targetPosition.x,
+                    targetPosition.y,
+                    TILE_HEIGHT,
+                    TILE_HEIGHT
+                )
             }
         )
     }
@@ -105,7 +100,7 @@ class Game(
         start: Float2,
         speed: State<Float2>
     ): State<Entity> {
-        val size = Float2(4 * 50f, 4 * 36f)
+        val size = Float2(2 * 19f, 2 * 29f)
 
         val startVector = Float2(start.x, start.y)
 
@@ -117,24 +112,13 @@ class Game(
         return position.map { position ->
             Entity(position, size) {
                 batch.draw(
-                    player,
-                    0f,
-                    0f,
+                    texture("adventurer-idle-00.png"),
+                    position.x,
+                    position.y,
+                    size.x,
+                    size.y
                 )
-
-//                drawImage(
-//                    image = player,
-//                    srcSize = Int2(50, 36),
-//                    dstSize = IntSize(4 * 50, 4 * 36),
-//                    srcOffset = IntOffset(0, 0),
-//                    dstOffset = IntOffset(
-//                        position.x.toInt(),
-//                        position.y.toInt()
-//                    ),
-//                    filterQuality = FilterQuality.None
-//                )
             }
         }
     }
-
 }
