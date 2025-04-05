@@ -21,19 +21,19 @@ data class Int2(val x: Int, val y: Int)
 class Game() {
     val clicked = broadcastEvent<Float2>("clicked")
 
-    val clicks = State.fold(listOf<State<Entity>>(), clicked) { clicked, click ->
+    private val spawned = State.fold(listOf<State<Entity>>(), clicked) { clicked, click ->
         clicked + entity(
             click,
             accelerating(Float2(0f, -220f), Float2(0f, -350f)),
         )
     }
 
-    val spawned = clicks.flatMap { clicks ->
-        clicks
+    private val spawnedStates = spawned.flatMap { spawned ->
+        spawned
             .sequenceState()
     }
 
-    val tiles = const(
+    private val tiles = const(
         listOf<Entity>(
             *(10..16).map {
                 tile(Int2(it, 10))
@@ -52,7 +52,7 @@ class Game() {
     /**
      * Creates a speed [v] that is accelerating by [dv]
      **/
-    fun accelerating(v: Float2, dv: Float2) = const(v) + integral(const(dv))
+    private fun accelerating(v: Float2, dv: Float2) = const(v) + integral(const(dv))
 
     fun entities() = State.combineAll(
         entity(
@@ -67,14 +67,14 @@ class Game() {
             Float2(2 * GAME_SIZE.x / 3, 350f),
             accelerating(Float2(0f, -100f), Float2(0f, -200f)),
         )
-    ).combineWith(spawned) { initial, spawned ->
+    ).combineWith(spawnedStates) { initial, spawned ->
         initial + spawned
     }.combineWith(tiles) { entities, tiles ->
         tiles + entities
     }
 
     /** Creates a tile */
-    fun tile(
+    private fun tile(
         position: Int2
     ): Entity {
         val targetPosition = Float2(position.x * TILE_HEIGHT, position.y * TILE_HEIGHT)
@@ -94,7 +94,7 @@ class Game() {
     }
 
     /** Creates a simple entity. */
-    fun entity(
+    private fun entity(
         start: Float2,
         speed: State<Float2>
     ): State<Entity> {
