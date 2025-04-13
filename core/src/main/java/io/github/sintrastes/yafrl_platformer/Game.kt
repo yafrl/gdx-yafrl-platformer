@@ -34,6 +34,14 @@ class Game(
         )
     }
 
+    // Note: For some reason, adding these is messing up motion.
+    val facingRight = Event.merged(
+        a.map { false },
+        d.map { true }
+    )
+        // TODO: Why does this get messed up if I replace it with hold?
+        .scan(true) { x, y -> y }
+
     private val spawnedStates = spawned.flatMap { spawned ->
         spawned
             .sequenceState()
@@ -156,7 +164,11 @@ class Game(
         return position.map { position ->
             Entity(position, size) {
                 batch.draw(
-                    texture("adventurer-idle-00.png"),
+                    if (facingRight.value) {
+                        texture("adventurer-idle-00.png")
+                    } else {
+                        texture("adventurer-idle-00-left.png")
+                    },
                     position.x,
                     position.y,
                     size.x,

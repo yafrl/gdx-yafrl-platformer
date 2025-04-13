@@ -1,4 +1,4 @@
+adventurer-idle-00-left.png
 adventurer-idle-00.png
-adventurer-idle-01.png
 background.png
 tileset.png
