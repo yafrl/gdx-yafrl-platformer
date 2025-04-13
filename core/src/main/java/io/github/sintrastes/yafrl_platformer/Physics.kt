@@ -61,32 +61,17 @@ object Physics {
     ): Float2 {
         var clippedPosition = tentativePosition
 
-        // Horizontal clipping
-        if (velocity.x > 0) { // Moving right
-            // If the right side of our entity overshoots other's left side...
-            if (tentativePosition.x + entitySize.x > other.position.x && tentativePosition.x < other.position.x) {
-                // ...clip so that the right edge aligns with other's left edge.
-                clippedPosition = clippedPosition.copy(x = other.position.x - entitySize.x)
-            }
-        } else if (velocity.x < 0) { // Moving left
-            // If the left side overshoots other's right side...
-            if (tentativePosition.x < other.position.x + other.size.x && tentativePosition.x + entitySize.x > other.position.x + other.size.x) {
-                // ...clip so that the left edge aligns with other's right edge.
-                clippedPosition = clippedPosition.copy(x = other.position.x + other.size.x)
-            }
-        }
-
         // Vertical clipping
-        if (velocity.y > 0) { // Moving down
-            // If the bottom overshoots other's top...
+        if (velocity.y > 0) { // Moving up
+            // If the top overshoots other's bottom...
             if (tentativePosition.y + entitySize.y > other.position.y && tentativePosition.y < other.position.y) {
-                // ...clip so that the bottom edge aligns with other's top edge.
+                // ...clip so that the top edge aligns with other's bottom edge.
                 clippedPosition = clippedPosition.copy(y = other.position.y - entitySize.y)
             }
-        } else if (velocity.y < 0) { // Moving up
-            // If the top overshoots other's bottom...
+        } else if (velocity.y < 0) { // Moving down
+            // If the bottom overshoots other's top...
             if (tentativePosition.y < other.position.y + other.size.y && tentativePosition.y + entitySize.y > other.position.y + other.size.y) {
-                // ...clip so that the top edge aligns with other's bottom edge.
+                // ...clip so that the bottom edge aligns with other's top edge.
                 clippedPosition = clippedPosition.copy(y = other.position.y + other.size.y)
             }
         }

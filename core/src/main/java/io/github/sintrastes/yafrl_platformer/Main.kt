@@ -2,10 +2,13 @@ package io.github.sintrastes.yafrl_platformer
 
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input
+import com.badlogic.gdx.graphics.FPSLogger
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.ScreenUtils
 import com.badlogic.gdx.utils.viewport.ScreenViewport
@@ -16,6 +19,7 @@ import io.github.sintrastes.yafrl.internal.Timeline
 import io.github.sintrastes.yafrl.vector.Float2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import ktx.graphics.moveTo
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -50,6 +54,11 @@ class Main : ApplicationAdapter(), DrawScope {
         return TextureRegion(texture(file), x, y, width, height)
     }
 
+    var currentlyClicked: Float2? = null
+    var clickedA: Boolean = false
+    var clickedD: Boolean = false
+    var clickedSpace: Boolean = false
+
     override fun create() {
         _batch = SpriteBatch()
         background = Texture("background.png")
@@ -67,9 +76,22 @@ class Main : ApplicationAdapter(), DrawScope {
 
         timeline = Timeline.currentTimeline()
 
-        game = Game()
+        game = Game(
+            clicked = clock.mapNotNull {
+                currentlyClicked
+            },
+            a = clock
+                .filter { clickedA }
+                .map { },
+            d = clock
+                .filter { clickedD }
+                .map { },
+            space = clock
+                .filter { clickedSpace }
+                .map { }
+        )
 
-        entities = game.entities()
+        entities = game.entities
     }
 
     override fun resize(width: Int, height: Int) {
@@ -87,20 +109,31 @@ class Main : ApplicationAdapter(), DrawScope {
             // Convert screen coordinates to world coordinates (camera space)
             val worldCoordinates = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
 
-            game.clicked.send(Float2(worldCoordinates.x, worldCoordinates.y))
+            currentlyClicked = Float2(worldCoordinates.x, worldCoordinates.y)
+        } else {
+            currentlyClicked = null
         }
 
+        clickedD = Gdx.input.isKeyPressed(Input.Keys.D)
+        clickedA = Gdx.input.isKeyPressed(Input.Keys.A)
+        clickedSpace = Gdx.input.isKeyPressed(Input.Keys.SPACE)
+
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f)
+
+        val position = game.player.value.position
+
+        camera.moveTo(Vector2(position.x, position.y))
         camera.update()
         batch.projectionMatrix = camera.combined
 
         batch.begin()
-        batch.draw(background, 0f, 0f,
+        batch.draw(
+            background, 0f, 0f,
             Gdx.graphics.width.toFloat(),
             Gdx.graphics.height.toFloat()
         )
 
-        println("Processing ${entities.value.size} entities, fps: ${1000f / dt.inWholeMilliseconds}")
+        //println("Processing ${entities.value.size} entities, fps: ${1000f / dt.inWholeMilliseconds}")
         for (entity in entities.value) {
             entity.render(this)
         }
